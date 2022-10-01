@@ -14,7 +14,7 @@ The ILI9488 Driver has transplant from ILI9431. So you We'll see codes of here.
 
 ###1.1 display colorful text：
 
-![Display Colors Text](src/img/screen.jpg=320x240)
+![Display Colors Text](src/img/screen.jpg)[320x240]
 
 ```python
 #!/usr/bin/python
