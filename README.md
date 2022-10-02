@@ -62,4 +62,4 @@ test()
 
 ```
 
-[PDF DataSheet](src/chip_docs/ILI9488-DataSheet_100.pdf)for further info about ILI Series Driver Relevant reference information.
+[PDF DataSheet](src/chip_docs/ILI9488-DataSheet_100.pdf) for further info about ILI Series Driver Relevant reference information.
