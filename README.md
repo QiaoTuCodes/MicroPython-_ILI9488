@@ -1,3 +1,5 @@
+[![CI badge](https://github.com/micropython/micropython/workflows/unix%20port/badge.svg)](https://github.com/micropython/micropython/actions?query=branch%3Amaster+event%3Apush) [![codecov](https://codecov.io/gh/micropython/micropython/branch/master/graph/badge.svg?token=I92PfD05sD)](https://codecov.io/gh/micropython/micropython)
+
 The ILI9488 TFT Driver for [MicroPython Ports]
 
 The driver has been tested on 01Studio Series Open Board. but It should work on whatever other micropython ports, if anyone find problems in other boards, please open an issue and We'll see.
