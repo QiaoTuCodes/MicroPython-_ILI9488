@@ -14,7 +14,7 @@ The ILI9488 Driver has transplant from ILI9431. So you We'll see codes of here.
 
 ###1.1 display colorful text：
 <p align="center">
-<img src="https://github.com/QiaoTuCodes/MicroPython-_ILI9488/blob/main/src/img/screen.jpg" alt="ILI9488 Logo" width="600" height="828"/>
+<img src="https://github.com/QiaoTuCodes/MicroPython-_ILI9488/blob/main/src/img/screen.jpg" alt="ILI9488 Logo" width="200" height="428"/>
 </p>
 
 ```python
