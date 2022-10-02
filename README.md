@@ -13,7 +13,7 @@ In 01Studio series open board that does not currently use any ILI9488-based TFT 
 </p>
 
 ## References:
-The ILI9488 Driver has transplant from ILI9431. So you We'll see codes of here.
+The ILI9488 Driver has transplant from ILI9341. So you We'll see codes of here.
 * [LCD Codes](https://github.com/adafruit/Adafruit_Python_ILI9341/blob/master/Adafruit_ILI9341/ILI9341.py)
 * [LCD Datasheet](http://www.lcdwiki.com/zh/3.5inch_SPI_Module_ILI9488_SKU:MSP3520) from LCDs manufacturer
 
