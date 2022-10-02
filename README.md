@@ -13,15 +13,8 @@ The ILI9488 Driver has transplant from ILI9431. So you We'll see codes of here.
 ##Usage Example:
 
 ###1.1 display colorful text：
-<html>
-<style> 
-.tupian{ border:1px solid #000; width:300px; height:100px} 
-.tupian img{width:300px; height:100px} 
-</style> 
-<div class="tupian">
-  <img src="https://github.com/QiaoTuCodes/MicroPython-_ILI9488/blob/main/src/img/screen.jpg" alt="ILI9488 Logo"/>
-</div>
-</html>
+<img src="https://github.com/QiaoTuCodes/MicroPython-_ILI9488/blob/main/src/img/screen.jpg" alt="ILI9488 Logo"/>
+
 
 ```python
 #!/usr/bin/python
