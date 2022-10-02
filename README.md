@@ -1,10 +1,11 @@
 [![CI badge](https://github.com/micropython/micropython/workflows/unix%20port/badge.svg)](https://github.com/micropython/micropython/actions?query=branch%3Amaster+event%3Apush) [![codecov](https://codecov.io/gh/micropython/micropython/branch/master/graph/badge.svg?token=I92PfD05sD)](https://codecov.io/gh/micropython/micropython)
 
 The ILI9488 TFT Driver for [MicroPython Ports]
+==============================================
 
 The driver has been tested on 01Studio Series Open Board. but It should work on whatever other micropython ports, if anyone find problems in other boards, please open an issue and We'll see.
 
-##Motivation
+## Motivation
 In 01Studio series open board that does not currently use any ILI9488-based TFT liquid crystal display , but here will complement complete that.
 
 <p align="center">
@@ -16,9 +17,9 @@ The ILI9488 Driver has transplant from ILI9431. So you We'll see codes of here.
 * [LCD Codes](https://github.com/adafruit/Adafruit_Python_ILI9341/blob/master/Adafruit_ILI9341/ILI9341.py)
 * [LCD Datasheet](http://www.lcdwiki.com/zh/3.5inch_SPI_Module_ILI9488_SKU:MSP3520) from LCDs manufacturer
 
-##Usage Example:
+## Usage Example:
 
-###1.1 display colorful text：
+### 1.1 display colorful text：
 <p align="left">
 <img src="https://github.com/QiaoTuCodes/MicroPython-_ILI9488/blob/main/src/img/screen.jpg" alt="ILI9488 Logo" width="300" height="428"/>
 </p>
