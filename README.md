@@ -7,6 +7,10 @@ The driver has been tested on 01Studio Series Open Board. but It should work on 
 ##Motivation
 In 01Studio series open board that does not currently use any ILI9488-based TFT liquid crystal display , but here will complement complete that.
 
+<p align="center">
+<img src=https://github.com/QiaoTuCodes/MicroPython-_ILI9488/blob/main/src/img/logo.jpg alt="ILI9488 Logo" width="600" height="600"/>
+</p>
+
 ##References:
 The ILI9488 Driver has transplant from ILI9431. So you We'll see codes of here.
 * [LCD Codes](https://github.com/adafruit/Adafruit_Python_ILI9341/blob/master/Adafruit_ILI9341/ILI9341.py)
