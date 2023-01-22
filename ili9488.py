@@ -13,9 +13,10 @@
 __author__ = 'Isaac'
 
 """ILI9488 LCD/Touch module."""
+from micropython import const
 from time import sleep
 from math import cos, sin, pi, radians
-from sys import implementation
+import sys
 from framebuf import FrameBuffer, RGB565  # type: ignore
 import ustruct  # type: ignore
 
@@ -28,6 +29,10 @@ def color565(r, g, b):
         b (int): Blue value.
     """
     return (r & 0xf8) << 8 | (g & 0xfc) << 3 | b >> 3
+
+def bswap16(x):
+    """Convert between little-endian and big-endian colors (16-bit)."""
+    return (x & 0xff00) >> 8 | (x & 0x00ff) << 8
 
 
 class Display(object):
@@ -51,7 +56,6 @@ class Display(object):
     RDSELFDIAG = const(0x0F)  # Read display self-diagnostic
     INVOFF = const(0x20)  # Display inversion off
     INVON = const(0x21)  # Display inversion on
-    GAMMASET = const(0x26)  # Gamma set
     DISPLAY_OFF = const(0x28)  # Display off
     DISPLAY_ON = const(0x29)  # Display on
     SET_COLUMN = const(0x2A)  # Column address set
@@ -62,7 +66,7 @@ class Display(object):
     VSCRDEF = const(0x33)  # Vertical scrolling definition
     MADCTL = const(0x36)  # Memory access control
     VSCRSADD = const(0x37)  # Vertical scrolling start address
-    PIXFMT = const(0x3A)  # COLMOD: Pixel format set
+    PIXFMT = const(0x3A)  # COLMOD: Set pixel format
     WRITE_DISPLAY_BRIGHTNESS = const(0x51)  # Brightness hardware dependent!
     READ_DISPLAY_BRIGHTNESS = const(0x52)
     WRITE_CTRL_DISPLAY = const(0x53)
@@ -78,21 +82,22 @@ class Display(object):
     DFUNCTR = const(0xB6)  # Display function control
     PWCTR1 = const(0xC0)  # Power control 1
     PWCTR2 = const(0xC1)  # Power control 2
-    PWCTRA = const(0xCB)  # Power control A
-    PWCTRB = const(0xCF)  # Power control B
+    PWCTR3 = const(0xC2)  # Power control 3
+    PWCTR4 = const(0xCB)  # Power control 4
+    PWCTR5 = const(0xCF)  # Power control 5
     VMCTR1 = const(0xC5)  # VCOM control 1
-    VMCTR2 = const(0xC7)  # VCOM control 2
-    RDID1 = const(0xDA)  # Read ID 1
-    RDID2 = const(0xDB)  # Read ID 2
-    RDID3 = const(0xDC)  # Read ID 3
-    RDID4 = const(0xDD)  # Read ID 4
+    CABCTR1 = const(0xC6)  # CABC control 1
+    CABCTR2 = const(0xC8)  # CABC control 2
+    CABCTR3 = const(0xC9)  # CABC control 3
+    CABCTR4 = const(0xCA)  # CABC control 4
+    CABCTR5 = const(0xCB)  # CABC control 5
+    CABCTR6 = const(0xCC)  # CABC control 6
+    CABCTR7 = const(0xCD)  # CABC control 7
+    CABCTR8 = const(0xCE)  # CABC control 8
+    CABCTR9 = const(0xCF)  # CABC control 9
+    RDID4 = const(0xD3)  # Read ID 4
     GMCTRP1 = const(0xE0)  # Positive gamma correction
     GMCTRN1 = const(0xE1)  # Negative gamma correction
-    DTCA = const(0xE8)  # Driver timing control A
-    DTCB = const(0xEA)  # Driver timing control B
-    POSC = const(0xED)  # Power on sequence control
-    ENABLE3G = const(0xF2)  # Enable 3 gamma control
-    PUMPRC = const(0xF7)  # Pump ratio control
 
     ROTATE = {
         0: 0x88,
@@ -125,7 +130,7 @@ class Display(object):
             self.rotation = self.ROTATE[rotation]
 
         # Initialize GPIO pins and set implementation specific methods
-        if implementation.name == 'circuitpython':
+        if sys.implementation.name == 'circuitpython':
             self.cs.switch_to_output(value=True)
             self.dc.switch_to_output(value=False)
             self.rst.switch_to_output(value=True)
@@ -139,35 +144,32 @@ class Display(object):
             self.reset = self.reset_mpy
             self.write_cmd = self.write_cmd_mpy
             self.write_data = self.write_data_mpy
+        # Most of our processors are little-endian and ILI colors need to be
+        # big-endian (but test sys.byteorder to be proactive for other CPUS)
+        if sys.byteorder == 'little':
+            self.swap_color = bswap16
+        else:
+            self.swap_color = lambda x: x        # no-op identity function
+
         self.reset()
         # Send initialization commands
         self.write_cmd(self.SWRESET)  # Software reset
-        sleep(.1)
-        self.write_cmd(self.PWCTRB, 0x00, 0xC1, 0x30)  # Pwr ctrl B
-        self.write_cmd(self.POSC, 0x64, 0x03, 0x12, 0x81)  # Pwr on seq. ctrl
-        self.write_cmd(self.DTCA, 0x85, 0x00, 0x78)  # Driver timing ctrl A
-        self.write_cmd(self.PWCTRA, 0x39, 0x2C, 0x00, 0x34, 0x02)  # Pwr ctrl A
-        self.write_cmd(self.PUMPRC, 0x20)  # Pump ratio control
-        self.write_cmd(self.DTCB, 0x00, 0x00)  # Driver timing ctrl B
-        self.write_cmd(self.PWCTR1, 0x23)  # Pwr ctrl 1
-        self.write_cmd(self.PWCTR2, 0x10)  # Pwr ctrl 2
-        self.write_cmd(self.VMCTR1, 0x3E, 0x28)  # VCOM ctrl 1
-        self.write_cmd(self.VMCTR2, 0x86)  # VCOM ctrl 2
+        sleep(.120) # requirement is 120ms between SWRESET and SLPOUT below
+
+        # revised minimal set of initialization commands for ILI9488
+        self.write_cmd(self.INVON)  # Inverse on
+        self.write_cmd(self.PWCTR3, 0x33)  # Pwr ctrl 3
+        self.write_cmd(self.PIXFMT, 0x55)  # pixel format
+        self.write_cmd(self.DFUNCTR, 0x02, 0x02, 0x3b) # display function setup
         self.write_cmd(self.MADCTL, self.rotation)  # Memory access ctrl
-        self.write_cmd(self.VSCRSADD, 0x00)  # Vertical scrolling start address
-        self.write_cmd(self.PIXFMT, 0x55)  # COLMOD: Pixel format
-        self.write_cmd(self.FRMCTR1, 0x00, 0x18)  # Frame rate ctrl
-        self.write_cmd(self.DFUNCTR, 0x02,0x02)
-        self.write_cmd(self.ENABLE3G, 0x00)  # Enable 3 gamma ctrl
-        self.write_cmd(self.GAMMASET, 0x01)  # Gamma curve selected
-        self.write_cmd(self.GMCTRP1, 0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E,
-                       0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00)
-        self.write_cmd(self.GMCTRN1, 0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31,
-                       0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F)
+
         self.write_cmd(self.SLPOUT)  # Exit sleep
-        sleep(.1)
+        # Actually, the data sheet says 120ms between a SLPIN/SLPOUT pairs.
+        # But after a SLPOUT, it says only 5ms required
+        #sleep(.1)
+        sleep(0.005)
         self.write_cmd(self.DISPLAY_ON)  # Display on
-        sleep(.1)
+        #sleep(.1)   # not required
         self.clear()
    
     def block(self, x0, y0, x1, y1, data):
@@ -203,7 +205,7 @@ class Display(object):
         if color:
             line = color.to_bytes(2, 'big') * (w * 8)
         else:
-            line = bytearray(w * 16)
+            line = bytearray(w * 16) # initialized to 0 by default
         for y in range(0, h, 8):
             self.block(0, y, w - 1, y + 7, line)
 
@@ -573,18 +575,14 @@ class Display(object):
         # Confirm coordinates in boundary
         if self.is_off_grid(x, y, x + 7, y + 7):
             return
-        # Rearrange color
-        r = (color & 0xF800) >> 8
-        g = (color & 0x07E0) >> 3
-        b = (color & 0x1F) << 3
+        # FrameBuffer stores colors in native byte-order while the ILI9488
+        # wants them in big-endian order.  Hence, we use self.swap_color()
+        # to rearrange the fg/bg colors before we write them to the FB
         buf = bytearray(w * 16)
         fbuf = FrameBuffer(buf, w, h, RGB565)
         if background != 0:
-            bg_r = (background & 0xF800) >> 8
-            bg_g = (background & 0x07E0) >> 3
-            bg_b = (background & 0x1F) << 3
-            fbuf.fill(color565(bg_b, bg_r, bg_g))
-        fbuf.text(text, 0, 0, color565(b, r, g))
+            fbuf.fill(self.swap_color(background))
+        fbuf.text(text, 0, 0, self.swap_color(color))
         if rotate == 0:
             self.block(x, y, x + w - 1, y + (h - 1), buf)
         elif rotate == 90:
@@ -956,13 +954,17 @@ class Display(object):
             command (byte): ILI9488 command code.
             *args (optional bytes): Data to transmit.
         """
+        #self.cs(1)              # unneeded?
         self.dc(0)
         self.cs(0)
         self.spi.write(bytearray([command]))
         self.cs(1)
         # Handle any passed data
         if len(args) > 0:
-            self.write_data(bytearray(args))
+            # unclear why, but writing mult bytes in one SPI call fails for me
+            #self.write_data(bytearray(args))
+            for data in args:
+                self.write_data(bytes([data]))
 
     def write_cmd_cpy(self, command, *args):
         """Write command to OLED (CircuitPython).
@@ -987,6 +989,7 @@ class Display(object):
         Args:
             data (bytes): Data to transmit.
         """
+        #self.cs(1)              # unneeded?
         self.dc(1)
         self.cs(0)
         self.spi.write(data)

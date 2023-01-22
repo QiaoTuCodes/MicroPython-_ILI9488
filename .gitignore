@@ -1,0 +1,6 @@
+# Emacs backups
+*~
+
+# Byte-compiled / optimized / etc files
+__pycache__
+*.py[cod]
